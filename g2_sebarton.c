@@ -8,16 +8,26 @@
 
 int main(void)
 {	
+    unsigned int c;
 
 	initSystem();
 
+	uart_puts("Hello World\n");
+
 	while(1) {	
 
-		// light LED
-		setLED(ON);
-		_delay_ms(100);
-		setLED(OFF);
-		_delay_ms(100);
+		if ( safeUARTgetc( &c ) == OK ) {
+
+			if ( c == 'A' ) {
+
+				uart_puts("Found A\n");
+
+			}
+
+		}
+
+		// echo char
+		uart_putc( (unsigned char)c );
 
 	}
 		
