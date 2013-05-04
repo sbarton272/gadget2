@@ -12,7 +12,7 @@ int main(void)
 
 	initSystem();
 
-	uart_puts("Hello World\n");
+	uart_puts("HALT is online\n");
 
 	while(1) {	
 
@@ -24,10 +24,10 @@ int main(void)
 
 			}
 
-		}
+			// echo char
+			uart_putc( (unsigned char)c );
 
-		// echo char
-		uart_putc( (unsigned char)c );
+		}
 
 	}
 		

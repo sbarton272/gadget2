@@ -277,7 +277,7 @@ AVRDUDE_PROGRAMMER = avrisp2
 
 # com1 = serial port. Use lpt1 to connect to parallel port.
 AVRDUDE_PORT = usb
-#AVRDUDE_PORT = /dev/ttyUSB0
+# AVRDUDE_PORT = /dev/ttyUSB0
 # programmer connected to serial device
 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex

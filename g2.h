@@ -16,7 +16,7 @@
 
 // Definitions for USB serial
 #define UART_BAUD_RATE 9600
-#define CPU_CLK 2000000UL
+#define CPU_CLK F_CPU
 
 #define ON 1
 #define OFF 0
