@@ -9,6 +9,7 @@ void initSystem() {
 
 	initLED();
 	initUART();
+    i2c_init();
 
     /*
      * now enable interrupt, since UART library is interrupt controlled
@@ -59,9 +60,6 @@ void initUART()
 {
 
 	uart_init( UART_BAUD_SELECT( UART_BAUD_RATE, CPU_CLK ) );
-	//UBRR0 = 8;
-	//UCSR0A |= _BV(U2X0);
-
 
 }
 

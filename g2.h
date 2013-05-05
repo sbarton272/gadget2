@@ -10,6 +10,7 @@
 #include <avr/pgmspace.h>
 #include <util/delay.h>
 #include "uart.h"
+#include "i2cmaster.h"
 
 // Some convenient definitions
 #define LED PC0
@@ -17,6 +18,9 @@
 // Definitions for USB serial
 #define UART_BAUD_RATE 9600
 #define CPU_CLK F_CPU
+
+// I2C
+#define Dev24C02  0xA2      // device address of EEPROM 24C02, see datasheet
 
 #define ON 1
 #define OFF 0

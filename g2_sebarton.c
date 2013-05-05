@@ -9,8 +9,15 @@
 int main(void)
 {	
     unsigned int c;
+    unsigned char accel_data;
 
 	initSystem();
+
+	// set device address and read mode
+	if ( !i2c_start(Dev24C02+I2C_READ) ) {
+		// error, so stop
+		i2c_stop();
+	}
 
 	uart_puts("HALT is online\n");
 
