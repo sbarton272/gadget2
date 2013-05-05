@@ -1,15 +1,15 @@
 #include "g2.h"
 
-/* ==========================
- * ===== Init All ===========
- * ========================== */
+/* =================================================================
+ * ===== Init All ==================================================
+ * ================================================================= */
 
 /* Run all of the init functions */
 void initSystem() {
 
 	initLED();
 	initUART();
-    i2c_init();
+    initI2C();
 
     /*
      * now enable interrupt, since UART library is interrupt controlled
@@ -21,9 +21,9 @@ void initSystem() {
 }
 
 
-/* ==========================
- * ===== LED Controls =======
- * ========================== */
+/* ================================================================
+ * ===== LED Controls =============================================
+ * ================================================================ */
 
 /* In this function you should set the LED pins to be outputs and
    set them high to turn them off (because our LEDs are active low)
@@ -50,9 +50,9 @@ void setLED(uint8_t led)
 }
 
 
-/* ==========================
- * ===== Serial Com =========
- * ========================== */
+/* ============================================================
+ * ===== Serial Com ===========================================
+ * ============================================================ */
 
  /* Activate the device to laptop serial
  */
@@ -86,6 +86,8 @@ int safeUARTgetc( int* c ) {
         {
             /* Framing Error detected, i.e no stop bit detected */
             uart_puts_P("UART Frame Error: ");
+            _delay_ms(ERROR_DELAY);
+
             return ERROR;
         }
         if ( *c & UART_OVERRUN_ERROR )
@@ -96,6 +98,8 @@ int safeUARTgetc( int* c ) {
              * one or more received characters have been dropped
              */
             uart_puts_P("UART Overrun Error: ");
+            _delay_ms(ERROR_DELAY);
+
             return ERROR;
         }
         if ( *c & UART_BUFFER_OVERFLOW )
@@ -105,6 +109,8 @@ int safeUARTgetc( int* c ) {
              * one or more received character have been dropped 
              */
             uart_puts_P("Buffer overflow error: ");
+            _delay_ms(ERROR_DELAY);
+
             return ERROR;
         }
     }
@@ -112,3 +118,94 @@ int safeUARTgetc( int* c ) {
     return OK;
 
 }
+
+
+/* ============================================================
+ * ===== I2C, accelerometer ===================================
+ * ============================================================ */
+
+ /* Activate the accelerometer */
+void initI2C() {
+
+    i2c_init();
+
+    i2cWrite( MODE, 0x00); // Setting up MODE to Stand by to set SR
+
+    i2cWrite( SR, 0x00);  // Setting up SR register to 120 samples active and auto sleep mode
+
+    i2cWrite( MODE, 0x01); //Setting up MODE Active to START measures 
+
+    // validate values written
+    unsigned char mode;
+    char str[7];
+
+    mode = i2cRead(MODE);
+    itoa( mode, str, 10);   // convert interger into string (decimal format)         
+    uart_puts( "Accelerometer online: ");
+    uart_puts( str );
+    uart_putc( '\n' );
+
+}
+
+
+/* wrapper for i2c_start to catch errors and print */
+int i2cSafeStart( unsigned char addr ) {
+
+    // set device in active mode
+    if ( i2c_start( ACCEL_ADDR + I2C_WRITE ) ) {
+
+        // error, so stop
+        i2c_stop();
+
+        uart_puts_P("Accelerometer unavailable\n");
+        _delay_ms(ERROR_DELAY);
+
+        return 0; // error condition
+
+    } else {
+        return 1; // ok
+    }
+
+
+}
+
+/* write register value, one byte reg value, one byte data 
+   silent failure
+ */
+void i2cWrite( unsigned char reg, unsigned char data) {
+
+    // set device in active mode
+    if ( i2cSafeStart( ACCEL_ADDR + I2C_WRITE ) ) {
+
+        i2c_write( reg );
+        i2c_write( data );
+        i2c_stop(); 
+
+    }
+}
+
+/* read register value, one byte reg value, one byte data
+    returns ERROR status on error condition
+ */
+unsigned char i2cRead( unsigned char reg) {
+
+    unsigned char ret = 0;
+
+    // set device in active mode
+    if ( i2cSafeStart( ACCEL_ADDR + I2C_WRITE ) ) {
+
+        i2c_write( reg );
+        i2c_rep_start( ACCEL_ADDR + I2C_READ );        // set device address and read mode
+        ret = i2c_readNak(); 
+        i2c_stop(); 
+
+        return ret;
+    
+    }
+
+    return ERROR;
+}
+
+
+
+

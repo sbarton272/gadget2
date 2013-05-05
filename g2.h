@@ -14,6 +14,7 @@
 
 // Some convenient definitions
 #define LED PC0
+#define ERROR_DELAY 100
 
 // Definitions for USB serial
 #define UART_BAUD_RATE 9600
@@ -21,6 +22,7 @@
 
 // I2C for accelerometer
 #define ACCEL_ADDR 	0x4c		// from datasheet
+#define I2C_DELAY 	100
 
 // regs for accelerometer
 #define XOUT        0x00
@@ -39,8 +41,6 @@
 #define	ACTIVE_MODE 	0x01
 #define	STANDBY_MODE 	0x00
 
-
-
 #define ON 1
 #define OFF 0
 
@@ -49,12 +49,19 @@
 #define ERROR  -1
 #define OK		1
 
+
+
 void initSystem(void);
 void initLED(void);
 void initUART(void);
+void initI2C(void);
 
 void setLED(uint8_t);
 
 int safeUARTgetc( int* c );
+
+int i2cSafeStart( unsigned char addr );
+void i2cWrite( unsigned char reg, unsigned char data);
+unsigned char i2cRead( unsigned char reg);
 
 #endif

@@ -15,31 +15,17 @@ int main(void)
 
 	uart_puts_P("HALT is online\n");
 
-	// set device in active mode
-	if ( i2c_start( ACCEL_ADDR + I2C_WRITE ) ) {
-
-		uart_puts_P("Accelerometer unavailable\n");
-
-		// error, so stop
-		i2c_stop();
-
-	} else {
-
-        i2c_write( MODE );
-        i2c_write( ACTIVE_MODE ); // set to active mode
-        i2c_stop(); 
-
-		uart_puts("Accelerometer online\n");
-	}
-
-	
 	while(1) {	
 
 		if ( safeUARTgetc( &c ) == OK ) {
 
-			if ( c == 'A' ) {
+			if ( c == 'L' ) {
 
-				uart_putc( '>' );
+				setLED(ON);
+
+			} else if ( c == 'O' ) {
+
+				setLED(OFF);
 
 			} else {
 
@@ -47,30 +33,13 @@ int main(void)
 				uart_putc( (unsigned char)c );
 
 			}
-
 		}
 
-		// set device address and read mode
-		if ( i2c_start( ACCEL_ADDR + I2C_READ ) ) {
 
-			uart_puts_P("Accelerometer unavailable\n");
-
-			// error, so stop
-			i2c_stop();
-
-		} else {
-
-
-	        i2c_write( XOUT );     // set to read from X data
-	        
-	        i2c_rep_start( ACCEL_ADDR + I2C_READ );        // set device address and read mode
-	        ret = i2c_readNak();                     
-	        i2c_stop(); 
-
-			itoa( ret, accel_data, 10);   // convert interger into string (decimal format)         
+		if ( (ret = i2cRead( XOUT )) != ERROR ) {
+			//itoa( ret, accel_data, 10);   // convert interger into string (decimal format)         
 			//uart_puts( accel_data );
 			//uart_putc( '\n' );
-
 		}
 
 
