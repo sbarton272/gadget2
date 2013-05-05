@@ -23,6 +23,16 @@ int main(void)
 
 	while(1) {	
 
+
+        i2c_start_wait(Dev24C02+I2C_WRITE);      // set device address and write mode
+        i2c_write(0x00);                         // write address = 0
+        i2c_rep_start(Dev24C02+I2C_READ);        // set device address and read mode
+        accel_data = i2c_readAck();                       // read one byte form address 0
+        accel_data = i2c_readAck();                       //  "    "    "    "     "    1
+        accel_data = i2c_readAck();                       //  "    "    "    "     "    2
+        accel_data = i2c_readNak();                       //  "    "    "    "     "    3
+        i2c_stop();   
+
 		if ( safeUARTgetc( &c ) == OK ) {
 
 			if ( c == 'A' ) {
@@ -33,6 +43,9 @@ int main(void)
 
 			// echo char
 			uart_putc( (unsigned char)c );
+			uart_putc( ':' );
+			uart_putc( (unsigned char)accel_data );
+			uart_putc( ';' );
 
 		}
 
