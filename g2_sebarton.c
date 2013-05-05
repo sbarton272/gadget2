@@ -8,8 +8,8 @@
 
 int main(void)
 {	
-    unsigned int c, ret;
-    char accel_data[7] = "empty";
+    unsigned int c;
+    struct accel_data_t accel_data = { 0 };
 	
 	initSystem();
 
@@ -21,26 +21,19 @@ int main(void)
 
 		if ( safeUARTgetc( &c ) == OK ) {
 
-			if ( c == 'L' ) {
+			if ( c == 'l' ) {
 
 				setLED(ON);
 
-			} else if ( c == 'O' ) {
+			} else if ( c == 'o' ) {
 
 				setLED(OFF);
 
-			} else if ( c == 'X' ) {
+			} else if ( c == 'x' ) {
 				
-				uart_putc( (unsigned char)c );
-
-				if ( (ret = i2cRead( XOUT )) != ERROR ) {
+				if ( i2cReadXYZ( &accel_data ) != ERROR) {
 					
-					uart_puts_P("Read\n");
-					_delay_ms(1000);
-
-					itoa( ret, accel_data, 10);   // convert interger into string (decimal format)         
-					uart_puts( accel_data );
-					uart_putc( '\n' );
+					printXYZ( accel_data );
 				}
 
 			} else {
@@ -51,6 +44,11 @@ int main(void)
 			}
 		}
 
+		if ( i2cReadXYZ( &accel_data ) != ERROR) {
+			printXYZ( accel_data );
+		}
+
+		_delay_ms(100);
 
 	} /* end eval loop */
 		

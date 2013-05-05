@@ -4,17 +4,25 @@
  * ===== Init All ==================================================
  * ================================================================= */
 
-/* Run all of the init functions */
+/* Run all of the init functions, blinks twice */
 void initSystem() {
 
 	initLED();
+    setLED(ON);
+    _delay_ms(500);
+    setLED(OFF);
+    _delay_ms(500);
 	initUART();
-    initI2C();
 
-    /*
-     * now enable interrupt, since UART library is interrupt controlled
-     */
+    // now enable interrupt, since UART library is interrupt controlled
     sei();
+
+    setLED(ON);
+    _delay_ms(500);
+    setLED(OFF);
+    _delay_ms(500);
+    
+    initI2C();
 
     setLED(ON); // leave status light on
 
@@ -32,9 +40,6 @@ void initLED()
 {
 	// Set LED pin direction to output
 	DDRC |= _BV(LED);
-	
-	// Start LEDs ON to signal device is on
-	setLED(ON);
 	
 }
 
@@ -131,43 +136,23 @@ void initI2C() {
     unsigned char mode;
     char str[7];
 
-    uart_putc( '1' );
-
     i2c_init();
 
-    uart_putc( '2' );
+    if ( !i2cWrite( MODE, 0x00) )
+        uart_putc('E'); // Setting up MODE to Stand by to set SR
 
-    if ( i2cSafeStart( ACCEL_ADDR + I2C_WRITE ) ) {
-        
-        uart_putc( '3' );
+    if ( !i2cWrite( SR, 0x00) )
+        uart_putc('E'); // Setting up SR register to 120 samples active and auto sleep mode
 
-        i2cWrite( MODE, 0x00); // Setting up MODE to Stand by to set SR
+    if ( !i2cWrite( MODE, 0x01) )
+        uart_putc('E'); //Setting up MODE Active to START measures 
 
-        uart_putc( '4' );
+    mode = i2cRead(MODE);
 
-        i2cWrite( SR, 0x00);  // Setting up SR register to 120 samples active and auto sleep mode
-
-        uart_putc( '5' );
-
-        i2cWrite( MODE, 0x01); //Setting up MODE Active to START measures 
-
-        uart_putc( '6' );
-
-        mode = i2cRead(MODE);
-
-        uart_putc( '7' );
-
-        itoa( mode, str, 10);   // convert interger into string (decimal format)         
-        uart_puts_P( "Accelerometer online: ");
-        uart_puts( str );
-        uart_putc( '\n' );
-    
-    } else {
-
-        uart_puts_P( "Accelerometer offline\n");
-
-    }
-
+    itoa( mode, str, 10);   // convert interger into string (decimal format)         
+    uart_puts_P( "Accelerometer online: ");
+    uart_puts( str );
+    uart_putc( '\n' );
 
 }
 
@@ -176,7 +161,7 @@ void initI2C() {
 int i2cSafeStart( unsigned char addr ) {
 
     // set device in active mode
-    if ( i2c_start( ACCEL_ADDR + I2C_WRITE ) ) {
+    if ( i2c_start( addr ) ) {
 
         // error, so stop
         i2c_stop();
@@ -187,6 +172,7 @@ int i2cSafeStart( unsigned char addr ) {
         return 0; // error condition
 
     } else {
+
         return 1; // ok
     }
 
@@ -194,17 +180,28 @@ int i2cSafeStart( unsigned char addr ) {
 }
 
 /* write register value, one byte reg value, one byte data 
-   silent failure
+   returns 0 on Error, 1 on success
  */
-void i2cWrite( unsigned char reg, unsigned char data) {
+int i2cWrite( unsigned char reg, unsigned char data) {
 
     if ( i2cSafeStart( ACCEL_ADDR + I2C_WRITE ) ) {
 
-        i2c_write( reg );
-        i2c_write( data );
+        if ( i2c_write( reg ) ) {
+            i2c_stop();
+            return 0;
+        }
+
+        if ( i2c_write( data ) ) {
+            i2c_stop();
+            return 0;
+        }
+
         i2c_stop(); 
 
+        return 1;
     }
+
+    return 0;
 }
 
 /* read register value, one byte reg value, one byte data
@@ -229,5 +226,44 @@ unsigned char i2cRead( unsigned char reg) {
 }
 
 
+/* read X, Y, Z data and store in struct
+ */
+int i2cReadXYZ( struct accel_data_t *accel_data ) {
 
+    if ( i2cSafeStart( ACCEL_ADDR + I2C_WRITE ) ) {
+
+        i2c_write( XOUT );
+        i2c_rep_start( ACCEL_ADDR + I2C_READ );        // set device address and read mode
+        accel_data->X = i2c_readAck(); 
+        accel_data->Y = i2c_readAck(); 
+        accel_data->Z = i2c_readNak(); 
+        i2c_stop(); 
+
+        return OK;
+    
+    }
+
+    return ERROR;
+}
+
+
+/* print X,Y,Z data to the laptop */
+void printXYZ( struct accel_data_t accel_data ) {
+
+    char X[7], Y[7], Z[7];
+
+    itoa( accel_data.X, X, 16);
+    itoa( accel_data.Y, Y, 16);
+    itoa( accel_data.Z, Z, 16);
+    
+
+    uart_puts( "X: " );
+    uart_puts( X );
+    uart_puts( "; Y: " );
+    uart_puts( Y );
+    uart_puts( "; Z: " );
+    uart_puts( Z );
+    uart_putc( '\n' );
+
+}
 

@@ -21,7 +21,7 @@
 #define CPU_CLK F_CPU
 
 // I2C for accelerometer
-#define ACCEL_ADDR 	0x4c		// from datasheet
+#define ACCEL_ADDR 	(0x4c << 1)		// from datasheet
 #define I2C_DELAY 	100
 
 // regs for accelerometer
@@ -49,6 +49,11 @@
 #define ERROR  -1
 #define OK		1
 
+struct accel_data_t {
+	unsigned char X;
+	unsigned char Y;
+	unsigned char Z;
+};
 
 
 void initSystem(void);
@@ -61,7 +66,9 @@ void setLED(uint8_t);
 int safeUARTgetc( int* c );
 
 int i2cSafeStart( unsigned char addr );
-void i2cWrite( unsigned char reg, unsigned char data);
+int i2cWrite( unsigned char reg, unsigned char data);
 unsigned char i2cRead( unsigned char reg);
+int i2cReadXYZ( struct accel_data_t *accel_data );
+void printXYZ( struct accel_data_t accel_data );
 
 #endif
