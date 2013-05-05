@@ -19,8 +19,27 @@
 #define UART_BAUD_RATE 9600
 #define CPU_CLK F_CPU
 
-// I2C
-#define Dev24C02  0xA2      // device address of EEPROM 24C02, see datasheet
+// I2C for accelerometer
+#define ACCEL_ADDR 	0x4c		// from datasheet
+
+// regs for accelerometer
+#define XOUT        0x00
+#define YOUT        0x01
+#define ZOUT        0x02
+#define TILT        0x03
+#define SRST        0x04
+#define SPCNT       0x05
+#define INTSU       0x06
+#define MODE        0x07
+#define SR          0x08
+#define PDET        0x09
+#define PD          0x0A
+
+// states for accel
+#define	ACTIVE_MODE 	0x01
+#define	STANDBY_MODE 	0x00
+
+
 
 #define ON 1
 #define OFF 0

@@ -9,17 +9,14 @@
 int main(void)
 {	
     unsigned int c, ret;
-    unsigned char accel_data = 'z';
+    char accel_data[7] = "empty";
 
 	initSystem();
 
 	uart_puts_P("HALT is online\n");
 
-	// set device address and read mode
-	ret = i2c_start(Dev24C02+I2C_WRITE); 
-	uart_puts_P("test\n");
-
-	if ( ret ) {
+	// set device in active mode
+	if ( i2c_start( ACCEL_ADDR + I2C_WRITE ) ) {
 
 		uart_puts_P("Accelerometer unavailable\n");
 
@@ -28,15 +25,13 @@ int main(void)
 
 	} else {
 
-        i2c_write(0x00);                         // write address = 0
-        i2c_rep_start(Dev24C02+I2C_READ);        // set device address and read mode
-        accel_data = i2c_readAck();                       // read one byte form address 0
-        accel_data = i2c_readAck();                       //  "    "    "    "     "    1
-        accel_data = i2c_readAck();                       //  "    "    "    "     "    2
-        accel_data = i2c_readNak();                       //  "    "    "    "     "    3
+        i2c_write( MODE );
+        i2c_write( ACTIVE_MODE ); // set to active mode
         i2c_stop(); 
 
+		uart_puts("Accelerometer online\n");
 	}
+
 	
 	while(1) {	
 
@@ -45,8 +40,6 @@ int main(void)
 			if ( c == 'A' ) {
 
 				uart_putc( '>' );
-				uart_putc( (unsigned char)accel_data );
-				uart_putc( '\n' );
 
 			} else {
 
@@ -57,6 +50,30 @@ int main(void)
 
 		}
 
-	}
+		// set device address and read mode
+		if ( i2c_start( ACCEL_ADDR + I2C_READ ) ) {
+
+			uart_puts_P("Accelerometer unavailable\n");
+
+			// error, so stop
+			i2c_stop();
+
+		} else {
+
+
+	        i2c_write( XOUT );     // set to read from X data
+	        
+	        i2c_rep_start( ACCEL_ADDR + I2C_READ );        // set device address and read mode
+	        ret = i2c_readNak();                     
+	        i2c_stop(); 
+
+			itoa( ret, accel_data, 10);   // convert interger into string (decimal format)         
+			//uart_puts( accel_data );
+			//uart_putc( '\n' );
+
+		}
+
+
+	} /* end eval loop */
 		
 }
