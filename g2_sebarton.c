@@ -10,10 +10,12 @@ int main(void)
 {	
     unsigned int c, ret;
     char accel_data[7] = "empty";
-
+	
 	initSystem();
 
 	uart_puts_P("HALT is online\n");
+	_delay_ms(1000);
+	
 
 	while(1) {	
 
@@ -29,7 +31,13 @@ int main(void)
 
 			} else if ( c == 'X' ) {
 				
+				uart_putc( (unsigned char)c );
+
 				if ( (ret = i2cRead( XOUT )) != ERROR ) {
+					
+					uart_puts_P("Read\n");
+					_delay_ms(1000);
+
 					itoa( ret, accel_data, 10);   // convert interger into string (decimal format)         
 					uart_puts( accel_data );
 					uart_putc( '\n' );

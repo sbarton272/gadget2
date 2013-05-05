@@ -127,23 +127,47 @@ int safeUARTgetc( int* c ) {
  /* Activate the accelerometer */
 void initI2C() {
 
-    i2c_init();
-
-    i2cWrite( MODE, 0x00); // Setting up MODE to Stand by to set SR
-
-    i2cWrite( SR, 0x00);  // Setting up SR register to 120 samples active and auto sleep mode
-
-    i2cWrite( MODE, 0x01); //Setting up MODE Active to START measures 
-
     // validate values written
     unsigned char mode;
     char str[7];
 
-    mode = i2cRead(MODE);
-    itoa( mode, str, 10);   // convert interger into string (decimal format)         
-    uart_puts( "Accelerometer online: ");
-    uart_puts( str );
-    uart_putc( '\n' );
+    uart_putc( '1' );
+
+    i2c_init();
+
+    uart_putc( '2' );
+
+    if ( i2cSafeStart( ACCEL_ADDR + I2C_WRITE ) ) {
+        
+        uart_putc( '3' );
+
+        i2cWrite( MODE, 0x00); // Setting up MODE to Stand by to set SR
+
+        uart_putc( '4' );
+
+        i2cWrite( SR, 0x00);  // Setting up SR register to 120 samples active and auto sleep mode
+
+        uart_putc( '5' );
+
+        i2cWrite( MODE, 0x01); //Setting up MODE Active to START measures 
+
+        uart_putc( '6' );
+
+        mode = i2cRead(MODE);
+
+        uart_putc( '7' );
+
+        itoa( mode, str, 10);   // convert interger into string (decimal format)         
+        uart_puts_P( "Accelerometer online: ");
+        uart_puts( str );
+        uart_putc( '\n' );
+    
+    } else {
+
+        uart_puts_P( "Accelerometer offline\n");
+
+    }
+
 
 }
 
@@ -174,7 +198,6 @@ int i2cSafeStart( unsigned char addr ) {
  */
 void i2cWrite( unsigned char reg, unsigned char data) {
 
-    // set device in active mode
     if ( i2cSafeStart( ACCEL_ADDR + I2C_WRITE ) ) {
 
         i2c_write( reg );
@@ -191,7 +214,6 @@ unsigned char i2cRead( unsigned char reg) {
 
     unsigned char ret = 0;
 
-    // set device in active mode
     if ( i2cSafeStart( ACCEL_ADDR + I2C_WRITE ) ) {
 
         i2c_write( reg );
@@ -203,7 +225,7 @@ unsigned char i2cRead( unsigned char reg) {
     
     }
 
-    return ERROR;
+    return (unsigned char)ERROR;
 }
 
 
