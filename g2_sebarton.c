@@ -27,19 +27,20 @@ int main(void)
 
 				setLED(OFF);
 
+			} else if ( c == 'X' ) {
+				
+				if ( (ret = i2cRead( XOUT )) != ERROR ) {
+					itoa( ret, accel_data, 10);   // convert interger into string (decimal format)         
+					uart_puts( accel_data );
+					uart_putc( '\n' );
+				}
+
 			} else {
 
 				// echo char
 				uart_putc( (unsigned char)c );
 
 			}
-		}
-
-
-		if ( (ret = i2cRead( XOUT )) != ERROR ) {
-			//itoa( ret, accel_data, 10);   // convert interger into string (decimal format)         
-			//uart_puts( accel_data );
-			//uart_putc( '\n' );
 		}
 
 
