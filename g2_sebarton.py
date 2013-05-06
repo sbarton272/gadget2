@@ -6,7 +6,8 @@
 # read from serial, analyze and active alarm
 # serial from http://pyserial.sourceforge.net/
 
-import serial, time, re
+import serial, time, re, sys
+import lookupTable as lookup
 
 port = 6 # COM 7
 baud = 9600
@@ -33,6 +34,22 @@ class ACCELEROMETER(object):
 		time.sleep(delay)
 		self.ser.write("l")
 
+	def parseAxis(self, data, type):
+		data_dec = int( data, 16 )
+
+		alert = (data_dec >> 6) & 1 # alert is bit 6
+		
+		measurment = data_dec & 63 # data is in bottom 6 bits
+
+		shaken = measurment in lookup.shaken
+
+		(force, angleXY, angleZ) = lookup.lookupXYZ.get(measurment)
+
+		print shaken, force, angleXY, angleZ
+		return measurment
+
+
+
 	def parseXYZ(self, data):
 		# format like     X: 0x3d; Y: 0xd; Z: 0x15;
 		regex = re.compile("X: (0x[0-9a-fA-F]{1,2}); Y: (0x[0-9a-fA-F]{1,2}); Z: (0x[0-9a-fA-F]{1,2});")
@@ -41,16 +58,15 @@ class ACCELEROMETER(object):
 			matched = r.groups()
 
 			# convert from hex to dec
-			X = int( matched[0], 16 )
-			Y = int( matched[1], 16 )
-			Z = int( matched[2], 16 )
+			X = self.parseAxis( matched[0], "X")
+			Y = self.parseAxis( matched[1], "Y")
+			Z = self.parseAxis( matched[2], "Z")
 
 			self.XYZ.append( (X,Y,Z) )
 			return (X,Y,Z)
 
 		# error, nothing matched
 		return data
-
 
 	def initConn(self):
 		ser = serial.Serial()
@@ -78,13 +94,17 @@ def main():
 
 	gadget.blinkLED(1)
 
-	for i in xrange(1,1000):
+	while 1:
 		gadget.ser.write("x") # request data
 
 		read = gadget.ser.readline(26)
 		if read != "\n":
-			print gadget.parseXYZ(read)
-	
+			(X,Y,Z) = gadget.parseXYZ(read)
+			print (X,Y,Z)
+			#print "X: ", "="*X
+			#print "Y: ", "="*Y
+			#print "Z: ", "="*Z
+
 	gadget.closeConn()
 
 
