@@ -8,9 +8,11 @@
 
 int main(void)
 {	
-    unsigned int c;
+    unsigned int c, printData;
     struct accel_data_t accel_data = { 0 };
 	
+	printData = 0;
+
 	initSystem();
 
 	uart_puts_P("HALT is online\n");
@@ -31,10 +33,7 @@ int main(void)
 
 			} else if ( c == 'x' ) {
 				
-				if ( i2cReadXYZ( &accel_data ) != ERROR) {
-					
-					printXYZ( accel_data );
-				}
+				printData = 1 - printData; // toggle var
 
 			} else {
 
@@ -44,11 +43,10 @@ int main(void)
 			}
 		}
 
-		if ( i2cReadXYZ( &accel_data ) != ERROR) {
+		if ( printData && i2cReadXYZ( &accel_data ) != ERROR) {
 			printXYZ( accel_data );
 		}
 
-		_delay_ms(100);
 
 	} /* end eval loop */
 		
