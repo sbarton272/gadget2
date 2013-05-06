@@ -257,12 +257,13 @@ void printXYZ( struct accel_data_t accel_data ) {
     itoa( accel_data.Z, Z, 16);
     
 
-    uart_puts( "X: " );
+    uart_puts( "X: 0x" );
     uart_puts( X );
-    uart_puts( "; Y: " );
+    uart_puts( "; Y: 0x" );
     uart_puts( Y );
-    uart_puts( "; Z: " );
+    uart_puts( "; Z: 0x" );
     uart_puts( Z );
+    uart_putc( ';' );
     uart_putc( '\n' );
 
 }
