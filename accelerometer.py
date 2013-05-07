@@ -115,10 +115,13 @@ class ACCELEROMETER(object):
 		ser.timeout = timeout
 		print "Stats\n", ser
 
-		ser.open()
-		print "Opened? ", ser.isOpen()
-		print
-		return ser
+		try:
+			ser.open()
+			print "Opened? ", ser.isOpen()
+			print
+			return ser
+		except:
+			raise NameError("Gadget not connected")
 
 	def closeConn(self):
 		self.ser.close()
@@ -165,7 +168,7 @@ class ALARM(object):
 		winsound.Beep(4400, self.duration)
 
 	def soundSiren( self ):
-		print "Giving you 10 seconds to stop the alarm"	
+		print "Alarm set"	
 		
 		self.playSiren()
 

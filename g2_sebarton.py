@@ -12,46 +12,69 @@
 # @TODO
 #
 
-
+import sys
 import accelerometer as accel
 
-port = 6 # COM 7
-baud = 9600
-timeout = 3 # sec
+PORT = 6 # COM 7
+BAUD = 9600
+TIMEOUT = 3 # sec
 MAXLINE = 32
 SAMPLES = 1000
-threshHold = .2
-(a, b, c) = (.33, .33, .33)
+THRESHHOLD = .2
+ABC = (.33, .33, .33)
+
+
+def safeInitGadget( baud, timeout, port, threshHold, (a,b,c) ):
+	try:
+		gadget = accel.ACCELEROMETER( baud, timeout, port, threshHold, (a,b,c) );
+		return gadget
+	except Exception as E:
+		print
+		print 'Error: ', E
+		sys.exit(1)
 
 
 def main():
 	
 	print "Starting HALT Laptop Security"
 	
-	gadget = accel.ACCELEROMETER( baud, timeout, port, threshHold, (a,b,c) );
+	# Handler for not connected
+	gadget = safeInitGadget( BAUD, TIMEOUT, PORT, THRESHHOLD, ABC )
+	
 	alarm = accel.ALARM();
 
 	gadget.blinkLED(1)
 
-
 	i = 0
-	while i < SAMPLES:
-		gadget.ser.write("x") # request data
+	try: # handler for disconnect
 
-		read = gadget.ser.readline(MAXLINE)
+		while i < SAMPLES:
+			gadget.ser.write("x") # request data
 
-		if read != "\n":
-			(X,Y,Z) = gadget.parseXYZ(read)
+			read = gadget.ser.readline(MAXLINE)
 
-			if gadget.motionDetected():
-				print "Motion"
-				alarm.soundSiren()
-				
-			
-			i += 1
+			if read != "\n":
+				(X,Y,Z) = gadget.parseXYZ(read)
 
-	gadget.closeConn()
-	gadget.dataWrite("xyzData.txt")
+				if gadget.motionDetected():
+					print "Motion"
+					alarm.soundSiren()
+					break # password correct, so program over
+
+				i += 1
+
+		gadget.closeConn()
+		gadget.dataWrite("xyzData.txt")
+
+	except Exception as E:
+		# if gadget disconnected trigger alarm, can tell if read fails
+		try:
+			gadget.ser.read()
+			print E
+			sys.exit(1) # some other error
+		except:
+			print "Caught you, nice try at disconnecting"
+			alarm.soundSiren()
 
 if __name__ == "__main__":
 	main()
