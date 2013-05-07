@@ -34,7 +34,7 @@ class ACCELEROMETER(object):
 		time.sleep(delay)
 		self.ser.write("l")
 
-	def parseAxis(self, data, type):
+	def parseAxis(self, data, axis):
 		data_dec = int( data, 16 )
 
 		alert = (data_dec >> 6) & 1 # alert is bit 6
@@ -45,9 +45,13 @@ class ACCELEROMETER(object):
 
 		(force, angleXY, angleZ) = lookup.lookupXYZ.get(measurment)
 
-		print shaken, force, angleXY, angleZ
-		return measurment
-
+		# return proper angle
+		if axis == "X" or axis == "Y":
+			return (shaken, force, angleXY)
+		elif axis == "Z":
+			return (shaken, force, angleZ)
+		else:
+			return None
 
 
 	def parseXYZ(self, data):
@@ -85,6 +89,25 @@ class ACCELEROMETER(object):
 		print "Closed? ", (not self.ser.isOpen())
 		print
 
+	def dataWrite(self, filename):
+		fout = open( filename , "w")
+
+		# header
+		header = "X shaken\tX g's\tX angle\t" 
+		header += "Y shaken\tY g's\tY angle\t" 
+		header += "Z shaken\tZ g's\tZ angle\t" + "\n"
+		fout.write( header )
+
+		for line in self.XYZ:
+			X = line[0]
+			Y = line[1]
+			Z = line[2]
+			formatted = "%r\t%r\t%r\t%r\t%r\t%r\t%r\t%r\t%r\n" % ( X[0], X[1], X[2], Y[0], Y[1], Y[2], Z[0], Z[1], Z[2])
+
+			fout.write( formatted )
+
+		fout.close()
+
 
 def main():
 	
@@ -94,18 +117,20 @@ def main():
 
 	gadget.blinkLED(1)
 
-	while 1:
+
+
+	for i in xrange(1,10):
 		gadget.ser.write("x") # request data
 
 		read = gadget.ser.readline(26)
 		if read != "\n":
 			(X,Y,Z) = gadget.parseXYZ(read)
 			print (X,Y,Z)
-			#print "X: ", "="*X
-			#print "Y: ", "="*Y
-			#print "Z: ", "="*Z
+
+			# write to file
 
 	gadget.closeConn()
+	gadget.dataWrite("xyzData.txt")
 
 
 if __name__ == "__main__":
