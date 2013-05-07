@@ -19,7 +19,6 @@ PORT = 6 # COM 7
 BAUD = 9600
 TIMEOUT = 3 # sec
 MAXLINE = 32
-SAMPLES = 1000
 THRESHHOLD = .2
 ABC = (.33, .33, .33)
 
@@ -45,10 +44,9 @@ def main():
 
 	gadget.blinkLED(1)
 
-	i = 0
 	try: # handler for disconnect
 
-		while i < SAMPLES:
+		while 1:
 			gadget.ser.write("x") # request data
 
 			read = gadget.ser.readline(MAXLINE)
@@ -61,10 +59,9 @@ def main():
 					alarm.soundSiren()
 					break # password correct, so program over
 
-				i += 1
 
 		gadget.closeConn()
-		gadget.dataWrite("xyzData.txt")
+		#gadget.dataWrite("xyzData.txt")
 
 	except Exception as E:
 		# if gadget disconnected trigger alarm, can tell if read fails
